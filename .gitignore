@@ -1,1 +1,8 @@
 /target
+
+.env
+/database*
+/*.db
+
+# not keep migrations until database schema to be stable
+/migrations
