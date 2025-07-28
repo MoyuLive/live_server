@@ -83,8 +83,8 @@ fn init_logger(log_config: &LogConfig) -> anyhow::Result<()> {
         }
 
         let wrt = std::fs::OpenOptions::new()
-            .write(true)
             .create(true)
+            .append(true)
             .open(path)
             .expect("failed to open log file");
 
@@ -93,7 +93,8 @@ fn init_logger(log_config: &LogConfig) -> anyhow::Result<()> {
             .with_timer(tracing_subscriber::fmt::time::ChronoLocal::rfc_3339())
             .with_file(true)
             .with_line_number(true)
-            .with_writer(wrt.with_max_level(log_level)).boxed();
+            .with_writer(wrt.with_max_level(log_level))
+            .boxed();
 
         layers.push(layer);
     }
