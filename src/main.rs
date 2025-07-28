@@ -85,7 +85,7 @@ fn init_logger(log_config: &LogConfig) -> anyhow::Result<()> {
         let wrt = std::fs::OpenOptions::new()
             .write(true)
             .create(true)
-            .truncate(true)
+            .append(true)
             .open(path)
             .expect("failed to open log file");
 
