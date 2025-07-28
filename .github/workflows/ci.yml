@@ -74,8 +74,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      - uses: cargo-bins/cargo-binstall@main
+
       - name: Install diesel CLI
-        run: cargo install diesel_cli --no-default-features --features postgres
+        run: cargo binstall diesel_cli
 
       - name: Setup database
         env:
