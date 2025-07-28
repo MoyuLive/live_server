@@ -83,7 +83,6 @@ fn init_logger(log_config: &LogConfig) -> anyhow::Result<()> {
         }
 
         let wrt = std::fs::OpenOptions::new()
-            .write(true)
             .create(true)
             .append(true)
             .open(path)
