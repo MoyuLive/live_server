@@ -1,0 +1,8 @@
+# rustfmt configuration for moyu live backend
+
+# Formatting preferences
+edition = "2021"
+max_width = 100
+tab_spaces = 4
+use_small_heuristics = "Default"
+

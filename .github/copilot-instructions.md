@@ -1,27 +1,30 @@
 # Copilot Instructions - Moyu Live Backend
 
 ## Project Overview
-This is a Rust-based live streaming backend server using Axum web framework, Diesel ORM, and PostgreSQL. The project integrates with SRS (Simple Realtime Server) for streaming capabilities.
+This is a Rust-based live streaming backend server using Axum web framework, Diesel ORM, and PostgreSQL. The project integrates with SRS (Simple Realtime Server) for streaming capabilities. Currently in early development phase with basic configuration and logging infrastructure in place.
 
 ## Architecture Patterns
 
 ### Configuration System
-- Uses layered configuration: file → environment variables with `LIVESERVER_` prefix
-- Configuration structure: `AppConfig` contains `LogConfig` and `SrsConfig`
-- Environment variables use underscore separator: `LIVESERVER_LOG_LEVEL`
-- Config aliases: `srs` for `srs_servers`, `consolelevel` for `console_level`
+- **Layered Configuration**: File → Environment variables with `LIVESERVER_` prefix
+- **Structure**: `AppConfig` contains `LogConfig`, `SrsConfig`, and `database_url`
+- **Environment Variables**: Use underscore separator (e.g., `LIVESERVER_LOG_LEVEL`, `LIVESERVER_DATABASE_URL`)
+- **Config Aliases**: `srs` for `srs_servers`, `consolelevel` for `console_level`, `api` for `api_url`
+- **Supported Formats**: TOML and JSON configuration files
 
 ### Database Integration
-- Uses Diesel ORM with PostgreSQL primary, SQLite secondary support
-- Schema defined in `src/models/schema.rs` (auto-generated from migrations)
-- Migrations stored in `./migrations` but excluded from git during development
-- Database URL configured via `.env` file for development
+- **Primary**: PostgreSQL with Diesel ORM (features: `postgres`, `r2d2`, `sqlite`)
+- **Schema**: Auto-generated in `src/models/schema.rs` from migrations
+- **Current Schema**: Simple `users` table (id, name, hashed_password)
+- **Development**: Migrations excluded from git (`.gitignore`) until schema stabilizes
+- **Setup**: Requires `.env` file with `DATABASE_URL=postgres://postgres:postgres@localhost:5432/moyu_live_dev`
 
 ### Logging Architecture
-- Dual logging: console + optional file output with different levels/formats
-- Console formats: `pretty` (default), `compact`, `full`, `json`
-- File logging always uses JSON format with file/line numbers
-- Uses `tracing` spans for structured logging (see main.rs app span pattern)
+- **Dual Output**: Console + optional file with independent log levels
+- **Console Formats**: `pretty` (default), `compact`, `full`, `json`
+- **File Format**: Always JSON with file/line numbers for debugging
+- **Structured Logging**: Uses `tracing` spans (see main.rs `_span` pattern)
+- **Dynamic Configuration**: Runtime format switching via config
 
 ### Module Structure
 ```
@@ -41,32 +44,14 @@ src/
 
 ## Development Workflow
 
-### Database Setup
-```bash
-# Install Diesel CLI (recommended via binstall)
-cargo binstall diesel_cli
+### Dependence
 
-# Setup development database
-echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/moyu_live_dev" > .env
-diesel setup
+All dependencies are already downloaded and set up in the project, including the postgres database and Diesel CLI, and also the migration is done for you.
 
-# Generate and apply migrations
-diesel migration generate <name>
-diesel migration run
-
-# Generate schema diff from existing schema.rs
-diesel migration generate --diff-schema <name>
-```
-
-### Configuration Examples
-- CLI: `cargo run -- --config /path/to/config.toml`
-- Environment: `LIVESERVER_LOG_LEVEL=debug LIVESERVER_DATABASE_URL=...`
-- File config supports TOML/JSON formats
-
-### SRS Integration
-- `SrsConfig` handles SRS server API endpoints
-- Multiple SRS servers supported via `srs_servers` array
-- API URL configuration via `api_url` field
+### Development Commands
+- Use `cargo check` to ensure code quality
+- Use `cargo fmt` to format code according to `rustfmt.toml`
+- Use `cargo clippy` for linting and code quality checks
 
 ## Code Conventions
 
@@ -82,6 +67,11 @@ diesel migration generate --diff-schema <name>
 ### Serde Configuration
 - Use `#[serde(alias = "...")]` for config field backwards compatibility
 - All config structs derive `Debug, Clone, Serialize, Deserialize`
+
+### Logging Patterns
+- Use structured spans: `let _span = span!(tracing::Level::TRACE, "context"); let _ = _span.enter();`
+- Layer aggregation for multiple outputs (console + file)
+- Console logging supports dynamic format switching
 
 ## Key Dependencies
 - **axum**: Web framework (not yet implemented in routes/)
