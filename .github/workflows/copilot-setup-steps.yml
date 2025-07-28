@@ -54,8 +54,10 @@ jobs:
       - name: Download dependencies
         run: cargo fetch
 
+      - uses: cargo-bins/cargo-binstall@main
+
       - name: Install diesel CLI
-        run: cargo install diesel_cli --no-default-features --features postgres
+        run: cargo bininstall diesel_cli
 
       - name: Setup database
         env:
