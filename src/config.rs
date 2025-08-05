@@ -4,10 +4,15 @@ use serde::{Deserialize, Serialize};
 pub struct AppConfig {
     pub log: LogConfig,
 
-    pub database_url: String,
+    pub database: DatabaseConfig,
 
     #[serde(alias = "srs")]
     pub srs_servers: Vec<SrsConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DatabaseConfig {
+    pub url: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

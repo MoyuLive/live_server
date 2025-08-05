@@ -3,6 +3,8 @@
 .env
 /database*
 /*.db
+/config.toml
+/logs/
 
 # not keep migrations until database schema to be stable
 /migrations

@@ -4,12 +4,18 @@ use tracing::span;
 use tracing_subscriber::{
     Layer, Registry, fmt::writer::MakeWriterExt, layer::SubscriberExt, util::SubscriberInitExt,
 };
+use axum::{routing::Router};
+use std::net::SocketAddr;
 
 use crate::config::{AppConfig, LogConfig};
+use crate::database::{establish_connection, run_migrations};
+use crate::routes::live;
 
 mod config;
+mod database;
 mod models;
 mod routes;
+mod srs_callback;
 
 #[derive(Debug, clap::Parser)]
 struct Args {
@@ -29,14 +35,34 @@ async fn main() -> anyhow::Result<()> {
     config_builder =
         config_builder.add_source(::config::Environment::with_prefix("LIVESERVER").separator("_"));
 
-    let app_conf: AppConfig = config_builder.build()?.try_deserialize()?;
+    let config = config_builder.build()?;
+    let app_conf: AppConfig = config.try_deserialize()?;
 
     init_logger(&app_conf.log)?;
 
     let _span = span!(tracing::Level::TRACE, "app");
     let _ = _span.enter();
 
-    // TODO
+    // 建立数据库连接
+    let pool = establish_connection(&app_conf.database.url)?;
+    
+    // 运行数据库迁移
+    run_migrations(&pool)?;
+    
+    // 创建应用状态
+    let app_state = live::AppState { pool };
+    
+    // 创建路由
+    let app = Router::new()
+        .merge(live::routes())
+        .with_state(app_state);
+    
+    // 启动服务器
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    tracing::info!("Server listening on {}", addr);
+    
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    axum::serve(listener, app.into_make_service()).await?;
 
     Ok(())
 }
